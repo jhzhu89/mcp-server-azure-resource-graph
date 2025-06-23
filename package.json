@@ -1,0 +1,29 @@
+{
+  "name": "mcp-server-azure-resource-graph",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/jsonwebtoken": "^9.0.10",
+    "typescript": "^5"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@azure/arm-resourcegraph": "^4.2.1",
+    "@azure/identity": "^4.10.1",
+    "@azure/msal-node": "^3.6.1",
+    "@modelcontextprotocol/sdk": "^1.13.0",
+    "@types/express": "^5.0.3",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "lru-cache": "^11.1.0",
+    "zod": "^3.25.67"
+  }
+}
