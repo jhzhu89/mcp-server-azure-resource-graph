@@ -1,5 +1,4 @@
-import { ResourceGraphManager } from "../services/resource-graph-manager.js";
-import type { UserContext } from "../types/auth.js";
+import type { AzureResourceClient } from "../services/azure-resource-client.js";
 
 export const queryAzureResourcesSchema = {
   name: "query-azure-resources",
@@ -18,12 +17,10 @@ export const queryAzureResourcesSchema = {
 
 export async function queryAzureResources(
   args: { query: string },
-  resourceGraphManager: ResourceGraphManager,
-  userContext: UserContext
+  client: AzureResourceClient
 ) {
   try {
-    const client = await resourceGraphManager.getClient(userContext);
-    const result = await resourceGraphManager.queryResources(client, args.query);
+    const result = await client.queryResources(args.query);
     
     return {
       content: [{

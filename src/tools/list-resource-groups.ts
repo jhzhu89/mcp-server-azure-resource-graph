@@ -1,5 +1,4 @@
-import { ResourceGraphManager } from "../services/resource-graph-manager.js";
-import type { UserContext } from "../types/auth.js";
+import type { AzureResourceClient } from "../services/azure-resource-client.js";
 import type { ResourceGroupInfo } from "../types/resource-types.js";
 import { QUERIES } from "../queries/predefined-queries.js";
 import { executeAzureQuery, formatToolResponse, formatErrorResponse } from "./base-tool.js";
@@ -21,14 +20,12 @@ export const listResourceGroupsSchema = {
 
 export async function listResourceGroups(
   args: { subscriptionId?: string },
-  resourceGraphManager: ResourceGraphManager,
-  userContext: UserContext
+  client: AzureResourceClient
 ) {
   try {
     const query = QUERIES.LIST_RESOURCE_GROUPS(args.subscriptionId);
     const response = await executeAzureQuery<ResourceGroupInfo>(
-      resourceGraphManager,
-      userContext,
+      client,
       query,
       "list resource groups"
     );

@@ -1,15 +1,12 @@
-import { ResourceGraphManager } from "../services/resource-graph-manager.js";
-import type { UserContext } from "../types/auth.js";
+import type { AzureResourceClient } from "../services/azure-resource-client.js";
 import type { StandardResponse } from "../types/resource-types.js";
 
 export async function executeAzureQuery<T>(
-  resourceGraphManager: ResourceGraphManager,
-  userContext: UserContext,
+  client: AzureResourceClient,
   query: string,
   operation: string
 ): Promise<StandardResponse<T>> {
-  const client = await resourceGraphManager.getClient(userContext);
-  const result = await resourceGraphManager.queryResources(client, query);
+  const result = await client.queryResources(query);
   
   return {
     count: result.count,

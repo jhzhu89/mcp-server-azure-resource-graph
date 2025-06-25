@@ -3,6 +3,7 @@ import { type TokenCredential } from "@azure/identity";
 import { LRUCache } from "lru-cache";
 import type { UserContext } from "../types/auth.js";
 import type { AzureAuthManager } from "../auth/azure-auth-manager.js";
+import { AzureResourceClient } from "./azure-resource-client.js";
 
 interface ClientCacheEntry {
   client: ResourceGraphClient;
@@ -49,20 +50,8 @@ export class ResourceGraphManager {
     return client;
   }
 
-  async queryResources(client: ResourceGraphClient, query: string) {
-    const request = {
-      query: query,
-      options: {
-        resultFormat: "objectArray" as const,
-      },
-    };
-
-    const result = await client.resources(request);
-    return {
-      count: result.count || 0,
-      data: result.data || [],
-      totalRecords: result.totalRecords || 0,
-      query: query,
-    };
+  async getConfiguredClient(userContext: UserContext): Promise<AzureResourceClient> {
+    const client = await this.getClient(userContext);
+    return new AzureResourceClient(client);
   }
 }

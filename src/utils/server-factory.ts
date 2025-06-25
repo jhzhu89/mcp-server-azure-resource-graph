@@ -29,7 +29,7 @@ export function createServer(
 
   async function authenticateAndExecute(
     accessToken: string,
-    handler: (resourceGraphManager: ResourceGraphManager, userContext: any) => Promise<any>
+    handler: (client: any) => Promise<any>
   ) {
     if (!accessToken) {
       return {
@@ -43,7 +43,8 @@ export function createServer(
 
     try {
       const userContext = await authManager.createUserContext(accessToken);
-      return await handler(resourceGraphManager, userContext);
+      const client = await resourceGraphManager.getConfiguredClient(userContext);
+      return await handler(client);
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Authentication failed";
       return {
@@ -71,23 +72,23 @@ export function createServer(
 
       switch (name) {
         case "query-azure-resources":
-          return await authenticateAndExecute(accessToken, async (resourceGraphManager, userContext) => {
-            return await queryAzureResources(input as { query: string }, resourceGraphManager, userContext);
+          return await authenticateAndExecute(accessToken, async (client) => {
+            return await queryAzureResources(input as { query: string }, client);
           });
 
         case "list-subscriptions":
-          return await authenticateAndExecute(accessToken, async (resourceGraphManager, userContext) => {
-            return await listSubscriptions(input as {}, resourceGraphManager, userContext);
+          return await authenticateAndExecute(accessToken, async (client) => {
+            return await listSubscriptions(input as {}, client);
           });
 
         case "list-resource-groups":
-          return await authenticateAndExecute(accessToken, async (resourceGraphManager, userContext) => {
-            return await listResourceGroups(input as { subscriptionId?: string }, resourceGraphManager, userContext);
+          return await authenticateAndExecute(accessToken, async (client) => {
+            return await listResourceGroups(input as { subscriptionId?: string }, client);
           });
 
         case "list-aks-clusters":
-          return await authenticateAndExecute(accessToken, async (resourceGraphManager, userContext) => {
-            return await listAksClusters(input as { subscriptionId?: string; resourceGroupName?: string }, resourceGraphManager, userContext);
+          return await authenticateAndExecute(accessToken, async (client) => {
+            return await listAksClusters(input as { subscriptionId?: string; resourceGroupName?: string }, client);
           });
 
         default:

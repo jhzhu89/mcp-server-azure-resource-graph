@@ -1,5 +1,4 @@
-import { ResourceGraphManager } from "../services/resource-graph-manager.js";
-import type { UserContext } from "../types/auth.js";
+import type { AzureResourceClient } from "../services/azure-resource-client.js";
 import type { AksClusterInfo } from "../types/resource-types.js";
 import { QUERIES } from "../queries/predefined-queries.js";
 import { executeAzureQuery, formatToolResponse, formatErrorResponse } from "./base-tool.js";
@@ -25,14 +24,12 @@ export const listAksClustersSchema = {
 
 export async function listAksClusters(
   args: { subscriptionId?: string; resourceGroupName?: string },
-  resourceGraphManager: ResourceGraphManager,
-  userContext: UserContext
+  client: AzureResourceClient
 ) {
   try {
     const query = QUERIES.LIST_AKS_CLUSTERS(args.subscriptionId, args.resourceGroupName);
     const response = await executeAzureQuery<AksClusterInfo>(
-      resourceGraphManager,
-      userContext,
+      client,
       query,
       "list AKS clusters"
     );
