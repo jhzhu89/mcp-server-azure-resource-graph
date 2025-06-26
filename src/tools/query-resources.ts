@@ -1,17 +1,18 @@
 import type { AzureResourceClient } from "../services/azure-resource-client.js";
+import { z } from "zod";
 
-export const queryAzureResourcesSchema = {
-  name: "query-azure-resources",
-  description: "Execute KQL queries against Azure Resource Graph",
-  inputSchema: {
-    type: "object",
-    properties: {
-      query: {
-        type: "string",
-        description: "KQL query to execute against Azure Resource Graph"
-      }
-    },
-    required: ["query"]
+const inputSchema = z.object({
+  query: z.string()
+    .describe("KQL query to execute against Azure Resource Graph")
+});
+
+export const queryResourcesTool = {
+  config: {
+    description: "Execute a custom KQL query against Azure Resource Graph",
+    inputSchema: inputSchema.shape
+  },
+  handler: async (args: z.infer<typeof inputSchema>, client: AzureResourceClient) => {
+    return await queryAzureResources(args, client);
   }
 };
 

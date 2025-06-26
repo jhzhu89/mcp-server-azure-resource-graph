@@ -1,42 +1,52 @@
-import jwt from "jsonwebtoken";
-import { ConfidentialClientApplication } from "@azure/msal-node";
-import type { OnBehalfOfRequest } from "@azure/msal-node";
+import { OnBehalfOfCredential } from "@azure/identity";
 import { AuthError, AuthErrorCode } from "../types/auth.js";
 import type { UserContext, CachedUserInfo } from "../types/auth.js";
 
+interface TokenCache {
+  token: string;
+  expiresAt: number;
+}
+
 export class AzureAuthManager {
+  private tokenCache = new Map<string, TokenCache>();
+
   constructor() {
   }
 
   async getResourceGraphToken(userContext: UserContext): Promise<{ token: string; expiresAt: number }> {
+    const cacheKey = `${userContext.tenantId}_${userContext.userObjectId}`;
+    
+    const cached = this.tokenCache.get(cacheKey);
+    if (cached && this.isValidCache(cached)) {
+      return { token: cached.token, expiresAt: cached.expiresAt };
+    }
+    
+    const tokenResult = await this.acquireNewToken(userContext);
+    
+    this.tokenCache.set(cacheKey, {
+      token: tokenResult.token,
+      expiresAt: tokenResult.expiresAt
+    });
+    
+    return tokenResult;
+  }
+  
+  private isValidCache(cached: TokenCache): boolean {
+    return cached.expiresAt > Date.now() + 60000;
+  }
+  
+  private async acquireNewToken(userContext: UserContext): Promise<{ token: string; expiresAt: number }> {
     try {
-      const oboRequest: OnBehalfOfRequest = {
-        oboAssertion: userContext.accessToken,
-        scopes: ["https://management.azure.com/.default"],
-      };
-
-      const clientId = process.env.AZURE_CLIENT_ID || "";
-      const clientSecret = process.env.AZURE_CLIENT_SECRET || "";
-
-      const msalClient = new ConfidentialClientApplication({
-        auth: {
-          clientId,
-          clientSecret,
-          authority: `https://login.microsoftonline.com/${userContext.tenantId}`,
-        },
-      });
-
-      const response = await msalClient.acquireTokenOnBehalfOf(oboRequest);
-
-      if (!response?.accessToken) {
+      const credential = this.createCredential(userContext);
+      const tokenResponse = await credential.getToken(["https://management.azure.com/.default"]);
+      
+      if (!tokenResponse?.token) {
         throw new Error("No access token received from OBO flow");
       }
-
-      const expiresAt = response.expiresOn?.getTime() || Date.now() + 60 * 60 * 1000;
       
       return {
-        token: response.accessToken,
-        expiresAt,
+        token: tokenResponse.token,
+        expiresAt: tokenResponse.expiresOnTimestamp
       };
     } catch (error) {
       throw new AuthError(
@@ -47,10 +57,37 @@ export class AzureAuthManager {
       );
     }
   }
+  
+  private createCredential(userContext: UserContext): OnBehalfOfCredential {
+    const clientId = process.env.AZURE_CLIENT_ID!;
+    const certPath = process.env.AZURE_CLIENT_CERTIFICATE_PATH;
+    const clientSecret = process.env.AZURE_CLIENT_SECRET;
+    
+    const options: any = {
+      tenantId: userContext.tenantId,
+      clientId,
+      userAssertionToken: userContext.accessToken
+    };
+    
+    if (certPath) {
+      options.certificatePath = certPath;
+    } else if (clientSecret) {
+      options.clientSecret = clientSecret;
+    } else {
+      throw new Error("Neither certificate nor client secret configured");
+    }
+    
+    return new OnBehalfOfCredential(options);
+  }
 
   async extractUserInfo(accessToken: string): Promise<CachedUserInfo> {
     try {
-      const decoded = jwt.decode(accessToken) as any;
+      const base64Payload = accessToken.split('.')[1];
+      if (!base64Payload) {
+        throw new Error("Invalid JWT token structure");
+      }
+      
+      const decoded = JSON.parse(Buffer.from(base64Payload, 'base64').toString());
 
       if (!decoded || !decoded.oid || !decoded.tid) {
         throw new Error("Invalid JWT token structure");
@@ -124,14 +161,6 @@ export class AzureAuthManager {
     }
 
     console.log("No access token found in request");
-    return null;
-  }
-
-  extractTokenFromArgs(args: any): string | null {
-    if (args && args.access_token) {
-      console.log('Access token found in arguments');
-      return args.access_token;
-    }
     return null;
   }
 }

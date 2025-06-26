@@ -2,19 +2,21 @@ import type { AzureResourceClient } from "../services/azure-resource-client.js";
 import type { ResourceGroupInfo } from "../types/resource-types.js";
 import { QUERIES } from "../queries/predefined-queries.js";
 import { executeAzureQuery, formatToolResponse, formatErrorResponse } from "./base-tool.js";
+import { z } from "zod";
 
-export const listResourceGroupsSchema = {
-  name: "list-resource-groups",
-  description: "List Azure resource groups, optionally filtered by subscription",
-  inputSchema: {
-    type: "object",
-    properties: {
-      subscriptionId: {
-        type: "string",
-        description: "Filter by subscription ID"
-      }
-    },
-    required: []
+const inputSchema = z.object({
+  subscriptionId: z.string()
+    .describe("Filter by subscription ID")
+    .optional()
+});
+
+export const listResourceGroupsTool = {
+  config: {
+    description: "List resource groups in a subscription",
+    inputSchema: inputSchema.shape
+  },
+  handler: async (args: z.infer<typeof inputSchema>, client: AzureResourceClient) => {
+    return await listResourceGroups(args, client);
   }
 };
 

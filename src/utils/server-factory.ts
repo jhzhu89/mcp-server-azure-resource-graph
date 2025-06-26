@@ -1,105 +1,75 @@
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
+import { ContextualMcpServer, type DependencyInjector } from "./contextual-mcp-server.js";
 import { AzureAuthManager } from "../auth/azure-auth-manager.js";
-import { ResourceGraphManager } from "../services/resource-graph-manager.js";
-import { queryAzureResources, queryAzureResourcesSchema } from "../tools/query-resources.js";
-import { listSubscriptions, listSubscriptionsSchema } from "../tools/list-subscriptions.js";
-import { listResourceGroups, listResourceGroupsSchema } from "../tools/list-resource-groups.js";
-import { listAksClusters, listAksClustersSchema } from "../tools/list-aks-clusters.js";
+import { ResourceGraphClientManager } from "../services/resource-graph-client-manager.js";
+import { queryResourcesTool } from "../tools/query-resources.js";
+import { listSubscriptionsTool } from "../tools/list-subscriptions.js";
+import { listResourceGroupsTool } from "../tools/list-resource-groups.js";
+import { listAksClustersTool } from "../tools/list-aks-clusters.js";
 
-const allTools = [
-  queryAzureResourcesSchema,
-  listSubscriptionsSchema,
-  listResourceGroupsSchema,
-  listAksClustersSchema
-];
+type ServerDependencies = {
+  resourceGraphClient: any;
+};
 
 export function createServer(
   authManager: AzureAuthManager,
-  resourceGraphManager: ResourceGraphManager
-): Server {
-  const server = new Server({
-    name: "azure-resource-graph-server",
-    version: "1.0.0"
-  }, {
-    capabilities: {
-      tools: {}
-    }
-  });
-
-  async function authenticateAndExecute(
-    accessToken: string,
-    handler: (client: any) => Promise<any>
-  ) {
+  resourceGraphManager: ResourceGraphClientManager
+): ContextualMcpServer<ServerDependencies> {
+  
+  const dependencyInjector: DependencyInjector<ServerDependencies> = async (request, extra) => {
+    const accessToken = request.params.arguments?.access_token;
+    
     if (!accessToken) {
-      return {
-        content: [{
-          type: "text",
-          text: "Error: No access token provided in arguments"
-        }],
-        isError: true
-      };
+      throw new Error("No access token provided in arguments");
     }
 
     try {
       const userContext = await authManager.createUserContext(accessToken);
-      const client = await resourceGraphManager.getConfiguredClient(userContext);
-      return await handler(client);
+      const resourceGraphClient = await resourceGraphManager.getConfiguredClient(userContext);
+      
+      return {
+        resourceGraphClient
+      };
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Authentication failed";
-      return {
-        content: [{
-          type: "text",
-          text: `Authentication error: ${errorMessage}`
-        }],
-        isError: true
-      };
+      throw new Error(`Authentication error: ${errorMessage}`);
     }
-  }
+  };
 
-  server.setRequestHandler(ListToolsRequestSchema, async () => {
-    return { tools: allTools };
-  });
-
-  server.setRequestHandler(
-    CallToolRequestSchema,
-    async (request: {
-      params: { name: string; _meta?: any; arguments?: Record<string, any> };
-      method: string;
-    }) => {
-      const { name, arguments: input = {} } = request.params;
-      const accessToken = input.access_token;
-
-      switch (name) {
-        case "query-azure-resources":
-          return await authenticateAndExecute(accessToken, async (client) => {
-            return await queryAzureResources(input as { query: string }, client);
-          });
-
-        case "list-subscriptions":
-          return await authenticateAndExecute(accessToken, async (client) => {
-            return await listSubscriptions(input as {}, client);
-          });
-
-        case "list-resource-groups":
-          return await authenticateAndExecute(accessToken, async (client) => {
-            return await listResourceGroups(input as { subscriptionId?: string }, client);
-          });
-
-        case "list-aks-clusters":
-          return await authenticateAndExecute(accessToken, async (client) => {
-            return await listAksClusters(input as { subscriptionId?: string; resourceGroupName?: string }, client);
-          });
-
-        default:
-          return {
-            content: [{
-              type: "text",
-              text: `Unknown tool: ${name}`
-            }],
-            isError: true
-          };
+  const server = new ContextualMcpServer<ServerDependencies>(
+    {
+      name: "azure-resource-graph-server",
+      version: "1.0.0"
+    },
+    dependencyInjector,
+    {
+      capabilities: {
+        tools: {}
       }
+    }
+  );
+
+  // Register Azure Resource Graph tools
+  server.registerTool("query-azure-resources", queryResourcesTool.config, 
+    async (args: any, extra: any) => {
+      return await queryResourcesTool.handler(args, extra.injected.resourceGraphClient);
+    }
+  );
+
+  server.registerTool("list-subscriptions", listSubscriptionsTool.config,
+    async (args: any, extra: any) => {
+      return await listSubscriptionsTool.handler(args, extra.injected.resourceGraphClient);
+    }
+  );
+
+  server.registerTool("list-resource-groups", listResourceGroupsTool.config,
+    async (args: any, extra: any) => {
+      return await listResourceGroupsTool.handler(args, extra.injected.resourceGraphClient);
+    }
+  );
+
+  server.registerTool("list-aks-clusters", listAksClustersTool.config,
+    async (args: any, extra: any) => {
+      return await listAksClustersTool.handler(args, extra.injected.resourceGraphClient);
     }
   );
 

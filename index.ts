@@ -1,41 +1,54 @@
 import express from "express";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { AzureAuthManager } from "./src/auth/azure-auth-manager.js";
-import { ResourceGraphManager } from "./src/services/resource-graph-manager.js";
+import { ResourceGraphClientManager } from "./src/services/resource-graph-client-manager.js";
 import { createServer } from "./src/utils/server-factory.js";
+
+const LOG_LEVEL = process.env.LOG_LEVEL || 'info';
+
+function debug(...args: any[]) {
+  if (LOG_LEVEL === 'debug') {
+    console.log('[DEBUG]', ...args);
+  }
+}
+
+function info(...args: any[]) {
+  if (LOG_LEVEL === 'debug' || LOG_LEVEL === 'info') {
+    console.log('[INFO]', ...args);
+  }
+}
+
+function error(...args: any[]) {
+  console.error('[ERROR]', ...args);
+}
 
 const app = express();
 app.use(express.json());
 
 const authManager = new AzureAuthManager();
-const resourceGraphManager = new ResourceGraphManager(authManager);
+const resourceGraphManager = new ResourceGraphClientManager(authManager);
+debug('Azure Resource Graph MCP Server initialized');
 
 app.post('/mcp', async (req, res) => {
-  console.log('MCP request received:', {
-    method: req.method,
-    url: req.url,
-    headers: req.headers,
-    bodyKeys: req.body ? Object.keys(req.body) : 'no body'
-  });
-  
+  debug('MCP request received');
   try {
     const server = createServer(authManager, resourceGraphManager);
+    debug('Server created, connecting...');
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
     });
 
     res.on('close', () => {
-      console.log('Request closed, cleaning up transport and server');
+      debug('Connection closed');
       transport.close();
       server.close();
     });
 
-    console.log('Connecting server to transport...');
     await server.connect(transport);
-    console.log('Handling request...');
+    debug('Transport connected');
     await transport.handleRequest(req, res, req.body);
-  } catch (error) {
-    console.error('Error handling MCP request:', error);
+  } catch (err) {
+    error('MCP request failed:', err);
     if (!res.headersSent) {
       res.status(500).json({
         jsonrpc: '2.0',
@@ -73,5 +86,6 @@ app.delete('/mcp', async (req, res) => {
 
 const PORT = 3000;
 app.listen(PORT, () => {
-  console.log(`Azure Resource Graph MCP Server listening on port ${PORT}`);
+  info(`Azure Resource Graph MCP Server listening on port ${PORT}`);
+  debug(`Endpoint: http://localhost:${PORT}/mcp`);
 });

@@ -2,23 +2,24 @@ import type { AzureResourceClient } from "../services/azure-resource-client.js";
 import type { AksClusterInfo } from "../types/resource-types.js";
 import { QUERIES } from "../queries/predefined-queries.js";
 import { executeAzureQuery, formatToolResponse, formatErrorResponse } from "./base-tool.js";
+import { z } from "zod";
 
-export const listAksClustersSchema = {
-  name: "list-aks-clusters",
-  description: "List Azure Kubernetes Service clusters, optionally filtered by subscription and resource group",
-  inputSchema: {
-    type: "object",
-    properties: {
-      subscriptionId: {
-        type: "string",
-        description: "Filter by subscription ID"
-      },
-      resourceGroupName: {
-        type: "string",
-        description: "Filter by resource group name"
-      }
-    },
-    required: []
+const inputSchema = z.object({
+  subscriptionId: z.string()
+    .describe("Filter by subscription ID")
+    .optional(),
+  resourceGroupName: z.string()
+    .describe("Filter by resource group name")
+    .optional()
+});
+
+export const listAksClustersTool = {
+  config: {
+    description: "List AKS clusters in a subscription and resource group",
+    inputSchema: inputSchema.shape
+  },
+  handler: async (args: z.infer<typeof inputSchema>, client: AzureResourceClient) => {
+    return await listAksClusters(args, client);
   }
 };
 

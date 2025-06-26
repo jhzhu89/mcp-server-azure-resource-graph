@@ -2,14 +2,17 @@ import type { AzureResourceClient } from "../services/azure-resource-client.js";
 import type { SubscriptionInfo } from "../types/resource-types.js";
 import { QUERIES } from "../queries/predefined-queries.js";
 import { executeAzureQuery, formatToolResponse, formatErrorResponse } from "./base-tool.js";
+import { z } from "zod";
 
-export const listSubscriptionsSchema = {
-  name: "list-subscriptions",
-  description: "List all Azure subscriptions accessible to the user",
-  inputSchema: {
-    type: "object",
-    properties: {},
-    required: []
+const inputSchema = z.object({});
+
+export const listSubscriptionsTool = {
+  config: {
+    description: "List all Azure subscriptions",
+    inputSchema: inputSchema.shape
+  },
+  handler: async (args: z.infer<typeof inputSchema>, client: AzureResourceClient) => {
+    return await listSubscriptions(args, client);
   }
 };
 

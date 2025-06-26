@@ -10,12 +10,14 @@ interface ClientCacheEntry {
   expiresAt: number;
 }
 
-export class ResourceGraphManager {
+export class ResourceGraphClientManager {
   private clientCache: LRUCache<string, ClientCacheEntry>;
+  private pendingRequests: Map<string, Promise<ResourceGraphClient>>;
   private authManager: AzureAuthManager;
 
   constructor(authManager: AzureAuthManager) {
     this.authManager = authManager;
+    this.pendingRequests = new Map();
     this.clientCache = new LRUCache<string, ClientCacheEntry>({
       max: 100,
       ttl: 60 * 60 * 1000,
@@ -23,16 +25,47 @@ export class ResourceGraphManager {
   }
 
   async getClient(userContext: UserContext): Promise<ResourceGraphClient> {
-    const cacheKey = `rg_${userContext.tenantId}_${userContext.userObjectId}`;
-    const cached = this.clientCache.get(cacheKey);
+    const cacheKey = this.buildCacheKey(userContext);
     
+    const cached = this.getCachedClient(cacheKey);
+    if (cached) return cached;
+    
+    const existingPromise = this.pendingRequests.get(cacheKey);
+    if (existingPromise) {
+      return existingPromise;
+    }
+    
+    const promise = this.createClientInternal(userContext, cacheKey);
+    this.pendingRequests.set(cacheKey, promise);
+    
+    try {
+      return await promise;
+    } finally {
+      this.pendingRequests.delete(cacheKey);
+    }
+  }
+
+  private buildCacheKey(userContext: UserContext): string {
+    return `rg_${userContext.tenantId}_${userContext.userObjectId}`;
+  }
+
+  private getCachedClient(cacheKey: string): ResourceGraphClient | null {
+    const cached = this.clientCache.get(cacheKey);
     const bufferMs = 1 * 60 * 1000;
+    
     if (cached && cached.expiresAt > Date.now() + bufferMs) {
       return cached.client;
     }
+    
+    return null;
+  }
+
+  private async createClientInternal(userContext: UserContext, cacheKey: string): Promise<ResourceGraphClient> {
+    const cached = this.getCachedClient(cacheKey);
+    if (cached) return cached;
 
     const tokenResult = await this.authManager.getResourceGraphToken(userContext);
-     const credential = {
+    const credential = {
       getToken: async () => ({
         token: tokenResult.token,
         expiresOnTimestamp: tokenResult.expiresAt
