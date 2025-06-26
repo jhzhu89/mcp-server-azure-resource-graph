@@ -1,37 +1,50 @@
 # Azure Resource Graph MCP Server
 
-A Model Context Protocol (MCP) server that provides access to Azure resources through Azure Resource Graph queries. This server enables AI assistants to query and retrieve information about Azure resources across subscriptions.
+An experimental Model Context Protocol (MCP) server that provides access to Azure resources through Azure Resource Graph queries. This server enables AI assistants to query and retrieve information about Azure resources across subscriptions.
 
 ## Key Features
 
 - **Multi-User Support**: Uses Azure AD On-Behalf-Of (OBO) authentication flow to support multiple Azure users
 - **Secure Authentication**: Each user's Azure identity is preserved through the OBO flow - queries are executed with the user's own permissions
-- **List Subscriptions**: Retrieve all Azure subscriptions accessible to the authenticated user
-- **List Resource Groups**: Get resource groups across subscriptions with filtering options
-- **List AKS Clusters**: Query Azure Kubernetes Service clusters with detailed information
-- **Custom Resource Queries**: Execute custom KQL queries against Azure Resource Graph
+- **Client Caching**: Implements client caching and connection reuse for better performance
+- **Resource Access**: 
+  - List Azure subscriptions accessible to the authenticated user
+  - Query resource groups across subscriptions with filtering options
+  - Retrieve Azure Kubernetes Service (AKS) clusters with detailed information
+  - Execute custom KQL queries against Azure Resource Graph
+- **Containerization**: Docker support for easy deployment and testing
+
+## Architecture Overview
+
+The server implements a modular architecture with the following components:
+
+- **ResourceGraphClientManager**: Manages Azure Resource Graph client instances with LRU caching
+- **AzureAuthManager**: Handles Azure AD authentication using the On-Behalf-Of flow
+- **ContextualMcpServer**: Custom MCP server implementation with dependency injection
+- **Tool-Based Architecture**: Modular tool system for different Azure resource operations
 
 ## Authentication Model
 
-This server uses **Azure AD On-Behalf-Of (OBO) authentication**, which means:
+This server uses **Azure AD On-Behalf-Of (OBO) authentication**:
 
-- **Multi-User Ready**: Multiple Azure users can use the same server instance
+- **Multi-User Support**: Multiple Azure users can use the same server instance
 - **User Identity Preservation**: Each user's queries are executed with their own Azure permissions
-- **Delegated Access**: The server acts on behalf of the authenticated user, not with its own identity
-- **Secure**: Users only see resources they have access to in their Azure environment
+- **Token Caching**: Implements LRU cache with automatic token refresh
+- **Delegated Access**: The server acts on behalf of the authenticated user
+- **Secure Access**: Users only see resources they have access to in their Azure environment
 
 ## Available Tools
 
-- `list-subscriptions`: List all accessible Azure subscriptions
-- `list-resource-groups`: List resource groups with optional filtering by subscription and location
-- `list-aks-clusters`: List AKS clusters with detailed cluster information
-- `query-resources`: Execute custom KQL queries against Azure Resource Graph
+- **`query-azure-resources`**: Execute custom KQL queries against Azure Resource Graph
+- **`list-subscriptions`**: List all accessible Azure subscriptions
+- **`list-resource-groups`**: List resource groups with optional filtering by subscription and location
+- **`list-aks-clusters`**: List AKS clusters with detailed cluster information
 
 ## Prerequisites
 
-- Node.js or Bun runtime
-- Azure subscription with appropriate permissions
-- Azure AD application registration with Resource Graph API permissions
+- **Runtime**: Node.js 18+ or Bun runtime
+- **Azure Environment**: Azure subscription with appropriate permissions
+- **Authentication**: Azure AD application registration with Resource Graph API permissions
 
 ## Azure Setup
 
@@ -52,33 +65,51 @@ This server uses **Azure AD On-Behalf-Of (OBO) authentication**, which means:
 
 ## Installation
 
-Install dependencies:
+### Using Bun (Recommended)
 
 ```bash
+# Install dependencies
 bun install
+
+# Start the server
+bun run index.ts
 ```
 
-Or with npm:
+### Using Node.js
 
 ```bash
+# Install dependencies
 npm install
+
+# Build and start
+npm run build
+npm start
+```
+
+### Using Docker
+
+```bash
+# Build and run
+docker build -t azure-resource-graph-mcp .
+docker run -p 3000:3000 --env-file azure_ad.env azure-resource-graph-mcp
 ```
 
 ## Configuration
 
-1. Copy the environment configuration:
+1. **Create environment configuration**:
    ```bash
    cp azure_ad.env.example azure_ad.env
    ```
 
-2. Update `azure_ad.env` with your Azure AD application details:
+2. **Configure Azure AD application details** in `azure_ad.env`:
    ```bash
    export AZURE_CLIENT_ID="your-client-id"
    export AZURE_CLIENT_SECRET="your-client-secret"
    export AZURE_TENANT_ID="your-tenant-id"
+   export LOG_LEVEL="info"  # Optional: debug, info, error
    ```
 
-3. Source the environment variables:
+3. **Load environment variables**:
    ```bash
    source azure_ad.env
    ```
@@ -87,61 +118,76 @@ npm install
 
 ### Running the Server
 
-Start the MCP server:
-
 ```bash
+# Development
 bun run index.ts
+
+# Production
+npm run build && npm start
 ```
 
-Or with npm:
+The server will start at `http://localhost:3000/mcp` and accept POST requests.
 
-```bash
-npm run build
-npm start
-```
+### Access Token Authentication
 
-The server will start on port 3000 and be available at `http://localhost:3000/mcp`.
+The server supports two methods for passing Azure AD access tokens:
 
-### Example Queries
+1. **Function Call Arguments** (Primary method):
+   - Pass `access_token` as a parameter in each MCP tool call
+   - Required because Python MCP clients cannot easily set custom HTTP headers correctly
+   - **Security Note**: For security reasons, `access_token` is not exposed in the tool's input schema definition. The server uses special handling to accept this parameter without advertising it in the schema, preventing accidental exposure in tool documentation or client interfaces.
 
-Once connected, you can use the following commands:
+2. **HTTP Headers** (Alternative method):
+   - Pass token in `Authorization: Bearer <token>` header
+   - Useful for clients that support custom headers
+
+### Example Usage
+
+Once connected to an MCP client:
 
 - "List all my Azure subscriptions"
-- "Show me all resource groups in subscription X"
+- "Show me all resource groups in subscription X"  
 - "List all AKS clusters with their status"
 - "Query for virtual machines in East US region"
 
-**Note**: Each user will only see resources they have permission to access in their Azure environment. The On-Behalf-Of authentication ensures queries are executed with the user's own identity and permissions.
+**Note**: Users only see resources they have permission to access in their Azure environment.
 
 ## Development
 
-Build the project:
-
 ```bash
+# Build TypeScript
 bun run build
-```
 
-The TypeScript files will be compiled to the `dist` directory.
+# Debug mode
+LOG_LEVEL=debug bun run index.ts
+```
 
 ## Project Structure
 
 ```
-src/
-├── auth/              # Azure authentication management
-├── queries/           # Predefined KQL queries
-├── services/          # Core service implementations
-├── tools/             # MCP tool definitions
-├── types/             # TypeScript type definitions
-└── utils/             # Utility functions
+├── index.ts                   # Main server entry point
+├── src/
+│   ├── auth/                 # Azure authentication management
+│   ├── services/             # Client management and caching
+│   ├── tools/                # MCP tool implementations
+│   ├── types/                # TypeScript type definitions
+│   └── utils/                # Server factory and utilities
 ```
 
 ## Troubleshooting
 
-- **Authentication Issues**: Ensure your Azure AD application has the `user_impersonation` permission and the environment variables are properly set
-- **Permission Errors**: Verify that the authenticated user has Reader access to the subscriptions being queried. Remember, users can only access resources they have permissions for in their Azure environment
-- **Token Expiration**: The server handles token refresh automatically using the On-Behalf-Of (OBO) flow
-- **Multi-User Issues**: Each user authenticates independently - if one user has access issues, it doesn't affect other users
+**Authentication Issues**:
+- Ensure your Azure AD app has `user_impersonation` permission
+- Verify environment variables are set correctly
+
+**Permission Errors**:
+- Users can only access resources they have permissions for
+- Check Azure RBAC assignments for the authenticated user
+
+**Token Issues**:
+- The server handles token refresh automatically
+- Enable debug logging to see detailed authentication flows
 
 ## License
 
-This project was created using `bun init` in bun v1.2.10. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+MIT License - see LICENSE file for details.

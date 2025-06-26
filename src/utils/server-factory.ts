@@ -16,7 +16,14 @@ export function createServer(
 ): ContextualMcpServer<ServerDependencies> {
   
   const dependencyInjector: DependencyInjector<ServerDependencies> = async (request, extra) => {
+    // Extract access_token from function arguments (primary method)
+    // Note: access_token is not included in tool schema definitions for security,
+    // but we accept it through special handling in the function arguments
     const accessToken = request.params.arguments?.access_token;
+    
+    // TODO: Also try to extract access_token from HTTP Authorization header
+    // if not found in arguments. This would be useful for clients that can
+    // properly set custom headers (unlike Python MCP clients which have limitations)
     
     if (!accessToken) {
       throw new Error("No access token provided in arguments");
