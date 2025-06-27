@@ -4,10 +4,9 @@ export interface UserContext {
   accessToken: string;
 }
 
-export interface CachedUserInfo {
+export interface JwtUserClaims {
   userObjectId: string;
   tenantId: string;
-  objectId: string;
   expiresAt: number;
 }
 

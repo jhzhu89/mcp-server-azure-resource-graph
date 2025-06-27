@@ -1,14 +1,8 @@
 import { OnBehalfOfCredential } from "@azure/identity";
-import { AuthError, AuthErrorCode } from "../types/auth.js";
-import type { UserContext, CachedUserInfo } from "../types/auth.js";
-
-interface TokenCache {
-  token: string;
-  expiresAt: number;
-}
+import { AuthError, AuthErrorCode, type UserContext, type JwtUserClaims, type CachedToken } from "../types/auth.js";
 
 export class AzureAuthManager {
-  private tokenCache = new Map<string, TokenCache>();
+  private tokenCache = new Map<string, CachedToken>();
 
   constructor() {
   }
@@ -17,7 +11,7 @@ export class AzureAuthManager {
     const cacheKey = `${userContext.tenantId}_${userContext.userObjectId}`;
     
     const cached = this.tokenCache.get(cacheKey);
-    if (cached && this.isValidCache(cached)) {
+    if (cached && this.isTokenCacheValid(cached)) {
       return { token: cached.token, expiresAt: cached.expiresAt };
     }
     
@@ -31,7 +25,8 @@ export class AzureAuthManager {
     return tokenResult;
   }
   
-  private isValidCache(cached: TokenCache): boolean {
+  private isTokenCacheValid(cached: CachedToken): boolean {
+    // Add 60 second buffer to prevent edge cases
     return cached.expiresAt > Date.now() + 60000;
   }
   
@@ -41,7 +36,7 @@ export class AzureAuthManager {
       const tokenResponse = await credential.getToken(["https://management.azure.com/.default"]);
       
       if (!tokenResponse?.token) {
-        throw new Error("No access token received from OBO flow");
+        throw new Error("Azure OBO flow returned no access token");
       }
       
       return {
@@ -74,13 +69,13 @@ export class AzureAuthManager {
     } else if (clientSecret) {
       options.clientSecret = clientSecret;
     } else {
-      throw new Error("Neither certificate nor client secret configured");
+      throw new Error("Azure authentication requires either client certificate path or client secret");
     }
     
     return new OnBehalfOfCredential(options);
   }
 
-  async extractUserInfo(accessToken: string): Promise<CachedUserInfo> {
+  async parseJwtClaims(accessToken: string): Promise<JwtUserClaims> {
     try {
       const base64Payload = accessToken.split('.')[1];
       if (!base64Payload) {
@@ -100,7 +95,6 @@ export class AzureAuthManager {
       return {
         userObjectId: decoded.oid,
         tenantId: decoded.tid,
-        objectId: decoded.oid,
         expiresAt: decoded.exp * 1000,
       };
     } catch (error) {
@@ -113,7 +107,7 @@ export class AzureAuthManager {
 
   async validateJwtToken(accessToken: string): Promise<boolean> {
     try {
-      const userInfo = await this.extractUserInfo(accessToken);
+      const userInfo = await this.parseJwtClaims(accessToken);
       return userInfo.expiresAt > Date.now();
     } catch (error) {
       return false;
@@ -129,7 +123,7 @@ export class AzureAuthManager {
       );
     }
 
-    const userInfo = await this.extractUserInfo(accessToken);
+    const userInfo = await this.parseJwtClaims(accessToken);
 
     return {
       userObjectId: userInfo.userObjectId,
