@@ -1,37 +1,31 @@
 import { ContextualMcpServer, type DependencyInjector } from "./contextual-mcp-server.js";
-import { AzureAuthManager } from "../auth/azure-auth-manager.js";
-import { ResourceGraphClientManager } from "../services/resource-graph-client-manager.js";
+import { JwtHandler } from "../azure-core/auth/jwt-token-validator.js";
+import { AzureClientManager } from "../azure-core/client/azure-client-manager.js";
 import { queryResourcesTool } from "../tools/query-resources.js";
 import { listSubscriptionsTool } from "../tools/list-subscriptions.js";
 import { listResourceGroupsTool } from "../tools/list-resource-groups.js";
 import { listAksClustersTool } from "../tools/list-aks-clusters.js";
+import { AzureResourceClient } from "../services/azure-resource-client.js";
 
 type ServerDependencies = {
-  resourceGraphClient: any;
+  resourceGraphClient: AzureResourceClient;
 };
 
 export function createServer(
-  authManager: AzureAuthManager,
-  resourceGraphManager: ResourceGraphClientManager
+  jwtHandler: JwtHandler,
+  clientManager: AzureClientManager<AzureResourceClient>
 ): ContextualMcpServer<ServerDependencies> {
   
-  const dependencyInjector: DependencyInjector<ServerDependencies> = async (request, extra) => {
-    // Extract access_token from function arguments (primary method)
-    // Note: access_token is not included in tool schema definitions for security,
-    // but we accept it through special handling in the function arguments
+  const dependencyInjector: DependencyInjector<ServerDependencies> = async (request) => {
     const accessToken = request.params.arguments?.access_token;
-    
-    // TODO: Also try to extract access_token from HTTP Authorization header
-    // if not found in arguments. This would be useful for clients that can
-    // properly set custom headers (unlike Python MCP clients which have limitations)
     
     if (!accessToken) {
       throw new Error("No access token provided in arguments");
     }
 
     try {
-      const userContext = await authManager.createUserContext(accessToken);
-      const resourceGraphClient = await resourceGraphManager.getConfiguredClient(userContext);
+      const parsedToken = await jwtHandler.validateToken(accessToken);
+      const resourceGraphClient = await clientManager.getClient(parsedToken);
       
       return {
         resourceGraphClient
@@ -55,7 +49,6 @@ export function createServer(
     }
   );
 
-  // Register Azure Resource Graph tools
   server.registerTool("query-azure-resources", queryResourcesTool.config, 
     async (args: any, extra: any) => {
       return await queryResourcesTool.handler(args, extra.injected.resourceGraphClient);

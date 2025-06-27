@@ -3,8 +3,7 @@ import type { Implementation } from '@modelcontextprotocol/sdk/types.js';
 import type { RequestHandlerExtra } from '@modelcontextprotocol/sdk/shared/protocol.js';
 
 type DependencyInjector<TDeps = any> = (
-  request: { params: { arguments?: Record<string, any> } },
-  extra: RequestHandlerExtra<any, any>
+  request: { params: { arguments?: Record<string, any> } }
 ) => Promise<TDeps>;
 
 export type { DependencyInjector };
@@ -34,7 +33,7 @@ export class ContextualMcpServer<TDeps = any> extends McpServer {
       if (schema.shape?.method?.value === 'tools/call') {
         const enhanced = async (request: any, extra: any) => {
           try {
-            const deps = await this.dependencyInjector(request, extra);
+            const deps = await this.dependencyInjector(request);
             const enhancedExtra: EnhancedRequestHandlerExtra<TDeps> = { 
               ...extra, 
               injected: deps 
