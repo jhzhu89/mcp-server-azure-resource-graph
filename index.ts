@@ -1,27 +1,27 @@
 import express from "express";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { createServer } from "./src/utils/server-factory.js";
-import { getAzureCoreConfig } from "./src/azure-core/config.js";
-import { createJwtHandler, createAzureClientManager } from "./src/azure-core/factory.js";
-import { ResourceGraphClientFactory } from "./src/services/resource-graph-client-factory.js";
-import { logger } from "./src/azure-core/logger.js";
+import { createServer } from "./src/services/server-factory.js";
+import { getAzureAuthConfig, logger } from "./src/azure-authentication/index.js";
 
 const serverLogger = logger.child({ component: 'server' });
 
 const app = express();
 app.use(express.json());
 
-const config = getAzureCoreConfig();
-const jwtHandler = createJwtHandler(config);
-const clientFactory = new ResourceGraphClientFactory();
-const clientManager = createAzureClientManager(config, clientFactory);
-serverLogger.debug('Azure Resource Graph MCP Server initialized');
+const config = getAzureAuthConfig();
+
+serverLogger.info({ 
+  authMode: config.authMode,
+  clientId: config.azure.clientId,
+  tenantId: config.azure.tenantId 
+}, 'Azure Resource Graph MCP Server initialized');
 
 app.post('/mcp', async (req, res) => {
   serverLogger.debug('MCP request received');
   try {
-    const server = createServer(jwtHandler, clientManager);
-    serverLogger.debug('Server created, connecting...');
+    const server = await createServer();
+    
+    serverLogger.debug({ authMode: config.authMode }, 'Server created, connecting...');
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
     });

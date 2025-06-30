@@ -17,13 +17,13 @@
   "dependencies": {
     "@azure/arm-resourcegraph": "^4.2.1",
     "@azure/identity": "^4.10.1",
+    "@isaacs/ttlcache": "^1.4.1",
     "@modelcontextprotocol/sdk": "^1.13.0",
     "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.10",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "jwks-rsa": "^3.2.0",
-    "lru-cache": "^11.1.0",
     "pino": "^9.7.0",
     "pino-pretty": "^13.0.0",
     "zod": "^3.25.67"

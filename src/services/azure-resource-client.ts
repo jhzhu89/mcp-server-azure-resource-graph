@@ -2,11 +2,11 @@ import { ResourceGraphClient } from "@azure/arm-resourcegraph";
 
 export class AzureResourceClient {
   private resourceGraphClient: ResourceGraphClient;
-  
+
   constructor(resourceGraphClient: ResourceGraphClient) {
     this.resourceGraphClient = resourceGraphClient;
   }
-  
+
   async queryResources(query: string) {
     const request = {
       query: query,
