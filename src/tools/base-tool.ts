@@ -1,6 +1,6 @@
 import type { AzureResourceClient } from "../services/azure-resource-client.js";
 import type { StandardResponse } from "../types/resource-types.js";
-import { logger } from "../azure-authentication/index.js";
+import { logger } from "@jhzhu89/azure-client-pool";
 
 const toolLogger = logger.child({ component: "tool" });
 

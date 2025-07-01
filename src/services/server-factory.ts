@@ -6,7 +6,7 @@ import {
   createClientProviderWithMapper,
   McpRequestMapper,
   logger,
-} from "../azure-authentication/index.js";
+} from "@jhzhu89/azure-client-pool";
 import { ResourceGraphClientFactory } from "./resource-graph-client-factory.js";
 import { queryResourcesTool } from "../tools/query-resources.js";
 import { listSubscriptionsTool } from "../tools/list-subscriptions.js";

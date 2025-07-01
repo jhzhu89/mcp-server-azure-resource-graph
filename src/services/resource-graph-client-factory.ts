@@ -1,6 +1,6 @@
 import { ResourceGraphClient } from "@azure/arm-resourcegraph";
 import { type TokenCredential } from "@azure/identity";
-import { type ClientFactory } from "../azure-authentication/index.js";
+import { type ClientFactory } from "@jhzhu89/azure-client-pool";
 import { AzureResourceClient } from "./azure-resource-client.js";
 
 export class ResourceGraphClientFactory
