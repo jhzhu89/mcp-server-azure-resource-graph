@@ -5,7 +5,7 @@ import {
 import {
   createClientProviderWithMapper,
   McpRequestMapper,
-  logger,
+  getLogger,
 } from "@jhzhu89/azure-client-pool";
 import { ResourceGraphClientFactory } from "./resource-graph-client-factory.js";
 import { queryResourcesTool } from "../tools/query-resources.js";
@@ -14,7 +14,7 @@ import { listResourceGroupsTool } from "../tools/list-resource-groups.js";
 import { listAksClustersTool } from "../tools/list-aks-clusters.js";
 import { type ServerDependencies } from "../tools/base-tool.js";
 
-const serverLogger = logger.child({ component: "server" });
+const serverLogger = getLogger("server");
 
 const clientProviderWithMapper = await createClientProviderWithMapper(
   new ResourceGraphClientFactory(),
@@ -30,7 +30,7 @@ export async function createServer(): Promise<
     const azureResourceClient =
       await clientProviderWithMapper.getAuthenticatedClient(request);
 
-    serverLogger.debug({}, "Dependencies injected for current request");
+    serverLogger.debug("Dependencies injected for current request");
 
     return { azureResourceClient: azureResourceClient };
   };

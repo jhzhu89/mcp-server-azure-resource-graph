@@ -1,33 +1,29 @@
 import express from "express";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { createServer } from "./src/services/server-factory.js";
-import { getAzureAuthConfig, logger } from "@jhzhu89/azure-client-pool";
+import { getAzureAuthConfig, getLogger } from "@jhzhu89/azure-client-pool";
 
-const serverLogger = logger.child({ component: "server" });
+const serverLogger = getLogger("server");
 
 const app = express();
 app.use(express.json());
 
 const config = getAzureAuthConfig();
 
-serverLogger.info(
-  {
-    authMode: config.authMode,
-    clientId: config.azure.clientId,
-    tenantId: config.azure.tenantId,
-  },
-  "Azure Resource Graph MCP Server initialized",
-);
+serverLogger.info("Azure Resource Graph MCP Server initialized", {
+  authMode: config.authMode,
+  clientId: config.azure.clientId,
+  tenantId: config.azure.tenantId,
+});
 
 app.post("/mcp", async (req, res) => {
   serverLogger.debug("MCP request received");
   try {
     const server = await createServer();
 
-    serverLogger.debug(
-      { authMode: config.authMode },
-      "Server created, connecting...",
-    );
+    serverLogger.debug("Server created, connecting...", {
+      authMode: config.authMode,
+    });
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
     });
@@ -42,10 +38,9 @@ app.post("/mcp", async (req, res) => {
     serverLogger.debug("Transport connected");
     await transport.handleRequest(req, res, req.body);
   } catch (err) {
-    serverLogger.error(
-      { error: err instanceof Error ? err.message : err },
-      "MCP request failed",
-    );
+    serverLogger.error("MCP request failed", {
+      error: err instanceof Error ? err.message : err,
+    });
     if (!res.headersSent) {
       res.status(500).json({
         jsonrpc: "2.0",
@@ -87,12 +82,10 @@ app.delete("/mcp", async (req, res) => {
 
 const PORT = 3000;
 app.listen(PORT, () => {
-  serverLogger.info(
-    { port: PORT },
-    "Azure Resource Graph MCP Server listening",
-  );
-  serverLogger.debug(
-    { endpoint: `http://localhost:${PORT}/mcp` },
-    "Server endpoint ready",
-  );
+  serverLogger.info("Azure Resource Graph MCP Server listening", {
+    port: PORT,
+  });
+  serverLogger.debug("Server endpoint ready", {
+    endpoint: `http://localhost:${PORT}/mcp`,
+  });
 });

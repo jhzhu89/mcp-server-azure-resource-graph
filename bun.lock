@@ -5,7 +5,7 @@
       "name": "mcp-server-azure-resource-graph",
       "dependencies": {
         "@azure/arm-resourcegraph": "^4.2.1",
-        "@jhzhu89/azure-client-pool": "^0.0.3",
+        "@jhzhu89/azure-client-pool": "^0.0.4",
         "@modelcontextprotocol/sdk": "^1.13.0",
         "@types/express": "^5.0.3",
         "express": "^5.1.0",
@@ -51,7 +51,7 @@
 
     "@isaacs/ttlcache": ["@isaacs/ttlcache@1.4.1", "", {}, "sha512-RQgQ4uQ+pLbqXfOmieB91ejmLwvSgv9nLx6sT6sD83s7umBypgg+OIBOBbEUiJXrfpnp9j0mRhYYdzp9uqq3lA=="],
 
-    "@jhzhu89/azure-client-pool": ["@jhzhu89/azure-client-pool@0.0.3", "", { "dependencies": { "@isaacs/ttlcache": "^1.4.1", "jsonwebtoken": "^9.0.2", "jwks-rsa": "^3.2.0", "pino": "^9.7.0", "pino-pretty": "^13.0.0" }, "peerDependencies": { "@azure/identity": "^4.10.0" } }, "sha512-aoW5O9j9Jn/IxowRa2IX28VDpOsB9YlyLjiZ0fbgY5JK8gAPJFdQX8PY7rhG2AtYo9uqhEpmdWeLsrLtWiDdnw=="],
+    "@jhzhu89/azure-client-pool": ["@jhzhu89/azure-client-pool@0.0.4", "", { "dependencies": { "@isaacs/ttlcache": "^1.4.1", "jsonwebtoken": "^9.0.2", "jwks-rsa": "^3.2.0", "pino": "^9.7.0", "pino-pretty": "^13.0.0" }, "peerDependencies": { "@azure/identity": "^4.10.0" } }, "sha512-tdHjEoQ/sFTjqHR5iVL6W4ip/4iH5lkoDEOpkl88fMjltT2cpZwfmAlD7i68NzdDzuJevr1g6hToj0NPZ8gbNQ=="],
 
     "@modelcontextprotocol/sdk": ["@modelcontextprotocol/sdk@1.13.0", "", { "dependencies": { "ajv": "^6.12.6", "content-type": "^1.0.5", "cors": "^2.8.5", "cross-spawn": "^7.0.5", "eventsource": "^3.0.2", "express": "^5.0.1", "express-rate-limit": "^7.5.0", "pkce-challenge": "^5.0.0", "raw-body": "^3.0.0", "zod": "^3.23.8", "zod-to-json-schema": "^3.24.1" } }, "sha512-P5FZsXU0kY881F6Hbk9GhsYx02/KgWK1DYf7/tyE/1lcFKhDYPQR9iYjhQXJn+Sg6hQleMo3DB7h7+p4wgp2Lw=="],
 

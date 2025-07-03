@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@azure/arm-resourcegraph": "^4.2.1",
-    "@jhzhu89/azure-client-pool": "^0.0.3",
+    "@jhzhu89/azure-client-pool": "^0.0.4",
     "@modelcontextprotocol/sdk": "^1.13.0",
     "@types/express": "^5.0.3",
     "express": "^5.1.0",
