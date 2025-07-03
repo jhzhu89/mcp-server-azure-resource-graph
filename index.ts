@@ -1,19 +1,16 @@
 import express from "express";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { createServer } from "./src/services/server-factory.js";
-import { getAzureAuthConfig, getLogger } from "@jhzhu89/azure-client-pool";
+import { getLogger } from "@jhzhu89/azure-client-pool";
+import { getAuthMode } from "./src/config/auth-config.js";
 
 const serverLogger = getLogger("server");
 
 const app = express();
 app.use(express.json());
 
-const config = getAzureAuthConfig();
-
 serverLogger.info("Azure Resource Graph MCP Server initialized", {
-  authMode: config.authMode,
-  clientId: config.azure.clientId,
-  tenantId: config.azure.tenantId,
+  authMode: getAuthMode(),
 });
 
 app.post("/mcp", async (req, res) => {
@@ -21,9 +18,7 @@ app.post("/mcp", async (req, res) => {
   try {
     const server = await createServer();
 
-    serverLogger.debug("Server created, connecting...", {
-      authMode: config.authMode,
-    });
+    serverLogger.debug("Server created, connecting...");
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
     });

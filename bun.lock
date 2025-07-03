@@ -5,7 +5,7 @@
       "name": "mcp-server-azure-resource-graph",
       "dependencies": {
         "@azure/arm-resourcegraph": "^4.2.1",
-        "@jhzhu89/azure-client-pool": "^0.0.4",
+        "@jhzhu89/azure-client-pool": "^0.0.6",
         "@modelcontextprotocol/sdk": "^1.13.0",
         "@types/express": "^5.0.3",
         "express": "^5.1.0",
@@ -35,7 +35,7 @@
 
     "@azure/core-util": ["@azure/core-util@1.12.0", "", { "dependencies": { "@azure/abort-controller": "^2.0.0", "@typespec/ts-http-runtime": "^0.2.2", "tslib": "^2.6.2" } }, "sha512-13IyjTQgABPARvG90+N2dXpC+hwp466XCdQXPCRlbWHgd3SJd5Q1VvaBGv6k1BIa4MQm6hAF1UBU1m8QUxV8sQ=="],
 
-    "@azure/identity": ["@azure/identity@4.10.1", "", { "dependencies": { "@azure/abort-controller": "^2.0.0", "@azure/core-auth": "^1.9.0", "@azure/core-client": "^1.9.2", "@azure/core-rest-pipeline": "^1.17.0", "@azure/core-tracing": "^1.0.0", "@azure/core-util": "^1.11.0", "@azure/logger": "^1.0.0", "@azure/msal-browser": "^4.2.0", "@azure/msal-node": "^3.5.0", "open": "^10.1.0", "tslib": "^2.2.0" } }, "sha512-YM/z6RxRtFlXUH2egAYF/FDPes+MUE6ZoknjEdaq7ebJMMNUzn9zCJ3bd2ZZZlkP0r1xKa88kolhFH/FGV7JnA=="],
+    "@azure/identity": ["@azure/identity@4.10.2", "", { "dependencies": { "@azure/abort-controller": "^2.0.0", "@azure/core-auth": "^1.9.0", "@azure/core-client": "^1.9.2", "@azure/core-rest-pipeline": "^1.17.0", "@azure/core-tracing": "^1.0.0", "@azure/core-util": "^1.11.0", "@azure/logger": "^1.0.0", "@azure/msal-browser": "^4.2.0", "@azure/msal-node": "^3.5.0", "open": "^10.1.0", "tslib": "^2.2.0" } }, "sha512-Uth4vz0j+fkXCkbvutChUj03PDCokjbC6Wk9JT8hHEUtpy/EurNKAseb3+gO6Zi9VYBvwt61pgbzn1ovk942Qg=="],
 
     "@azure/logger": ["@azure/logger@1.2.0", "", { "dependencies": { "@typespec/ts-http-runtime": "^0.2.2", "tslib": "^2.6.2" } }, "sha512-0hKEzLhpw+ZTAfNJyRrn6s+V0nDWzXk9OjBr2TiGIu0OfMr5s2V4FpKLTAK3Ca5r5OKLbf4hkOGDPyiRjie/jA=="],
 
@@ -43,15 +43,15 @@
 
     "@azure/ms-rest-js": ["@azure/ms-rest-js@2.7.0", "", { "dependencies": { "@azure/core-auth": "^1.1.4", "abort-controller": "^3.0.0", "form-data": "^2.5.0", "node-fetch": "^2.6.7", "tslib": "^1.10.0", "tunnel": "0.0.6", "uuid": "^8.3.2", "xml2js": "^0.5.0" } }, "sha512-ngbzWbqF+NmztDOpLBVDxYM+XLcUj7nKhxGbSU9WtIsXfRB//cf2ZbAG5HkOrhU9/wd/ORRB6lM/d69RKVjiyA=="],
 
-    "@azure/msal-browser": ["@azure/msal-browser@4.13.2", "", { "dependencies": { "@azure/msal-common": "15.7.1" } }, "sha512-lS75bF6FYZRwsacKLXc8UYu/jb+gOB7dtZq5938chCvV/zKTFDnzuXxCXhsSUh0p8s/P8ztgbfdueD9lFARQlQ=="],
+    "@azure/msal-browser": ["@azure/msal-browser@4.14.0", "", { "dependencies": { "@azure/msal-common": "15.8.0" } }, "sha512-6VB06LypBS0Cf/dSUwRZse/eGnfAHwDof7GpCfoo3JjnruSN40jFBw+QXZd1ox5OLC6633EdWRRz+TGeHMEspg=="],
 
-    "@azure/msal-common": ["@azure/msal-common@15.7.1", "", {}, "sha512-a0eowoYfRfKZEjbiCoA5bPT3IlWRAdGSvi63OU23Hv+X6EI8gbvXCoeqokUceFMoT9NfRUWTJSx5FiuzruqT8g=="],
+    "@azure/msal-common": ["@azure/msal-common@15.8.0", "", {}, "sha512-gYqq9MsWT/KZh8iTG37DkGv+wgfllgImTMB++Z83qn75M5eZ0cMX5kSSXdJqHbFm1qxaYydv+2kiVyA9ksN9pA=="],
 
-    "@azure/msal-node": ["@azure/msal-node@3.6.1", "", { "dependencies": { "@azure/msal-common": "15.7.1", "jsonwebtoken": "^9.0.0", "uuid": "^8.3.0" } }, "sha512-ctcVz4xS+st5KxOlQqgpvA+uDFAa59CvkmumnuhlD2XmNczloKBdCiMQG7/TigSlaeHe01qoOlDjz3TyUAmKUg=="],
+    "@azure/msal-node": ["@azure/msal-node@3.6.2", "", { "dependencies": { "@azure/msal-common": "15.8.0", "jsonwebtoken": "^9.0.0", "uuid": "^8.3.0" } }, "sha512-lfZtncCSmKvW31Bh3iUBkeTf+Myt85YsamMkGNZ0ayTO5MirOGBgTa3BgUth0kWFBQuhZIRfi5B95INZ+ppkjw=="],
 
     "@isaacs/ttlcache": ["@isaacs/ttlcache@1.4.1", "", {}, "sha512-RQgQ4uQ+pLbqXfOmieB91ejmLwvSgv9nLx6sT6sD83s7umBypgg+OIBOBbEUiJXrfpnp9j0mRhYYdzp9uqq3lA=="],
 
-    "@jhzhu89/azure-client-pool": ["@jhzhu89/azure-client-pool@0.0.4", "", { "dependencies": { "@isaacs/ttlcache": "^1.4.1", "jsonwebtoken": "^9.0.2", "jwks-rsa": "^3.2.0", "pino": "^9.7.0", "pino-pretty": "^13.0.0" }, "peerDependencies": { "@azure/identity": "^4.10.0" } }, "sha512-tdHjEoQ/sFTjqHR5iVL6W4ip/4iH5lkoDEOpkl88fMjltT2cpZwfmAlD7i68NzdDzuJevr1g6hToj0NPZ8gbNQ=="],
+    "@jhzhu89/azure-client-pool": ["@jhzhu89/azure-client-pool@0.0.6", "", { "dependencies": { "@isaacs/ttlcache": "^1.4.1", "jsonwebtoken": "^9.0.2", "jwks-rsa": "^3.2.0", "pino": "^9.7.0", "pino-pretty": "^13.0.0" }, "peerDependencies": { "@azure/identity": "^4.10.0" } }, "sha512-8RDfpcNM19L7GtKrDLKYvq2Kl/Ysymd/7K/Y5+OVvCZqqaz5jKBzYy4IPgKLspMQqmdCP5y//+uIi7Wmsz5vuQ=="],
 
     "@modelcontextprotocol/sdk": ["@modelcontextprotocol/sdk@1.13.0", "", { "dependencies": { "ajv": "^6.12.6", "content-type": "^1.0.5", "cors": "^2.8.5", "cross-spawn": "^7.0.5", "eventsource": "^3.0.2", "express": "^5.0.1", "express-rate-limit": "^7.5.0", "pkce-challenge": "^5.0.0", "raw-body": "^3.0.0", "zod": "^3.23.8", "zod-to-json-schema": "^3.24.1" } }, "sha512-P5FZsXU0kY881F6Hbk9GhsYx02/KgWK1DYf7/tyE/1lcFKhDYPQR9iYjhQXJn+Sg6hQleMo3DB7h7+p4wgp2Lw=="],
 

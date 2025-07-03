@@ -6,6 +6,8 @@ import {
   createClientProviderWithMapper,
   McpRequestMapper,
   getLogger,
+  AuthMode,
+  type AuthRequestFactory,
 } from "@jhzhu89/azure-client-pool";
 import { ResourceGraphClientFactory } from "./resource-graph-client-factory.js";
 import { queryResourcesTool } from "../tools/query-resources.js";
@@ -13,12 +15,27 @@ import { listSubscriptionsTool } from "../tools/list-subscriptions.js";
 import { listResourceGroupsTool } from "../tools/list-resource-groups.js";
 import { listAksClustersTool } from "../tools/list-aks-clusters.js";
 import { type ServerDependencies } from "../tools/base-tool.js";
+import { getAuthMode } from "../config/auth-config.js";
 
 const serverLogger = getLogger("server");
 
-const clientProviderWithMapper = await createClientProviderWithMapper(
+const createAuthRequest: AuthRequestFactory = (authData) => {
+  const authMode = getAuthMode();
+
+  if (authMode === "delegated") {
+    if (!authData.accessToken) {
+      throw new Error("Access token required for delegated authentication");
+    }
+    return { mode: AuthMode.Delegated, accessToken: authData.accessToken };
+  }
+
+  return { mode: AuthMode.Application };
+};
+
+const { getClient } = await createClientProviderWithMapper(
   new ResourceGraphClientFactory(),
   new McpRequestMapper(),
+  createAuthRequest,
 );
 
 export async function createServer(): Promise<
@@ -27,8 +44,7 @@ export async function createServer(): Promise<
   const dependencyInjector: DependencyInjector<ServerDependencies> = async (
     request,
   ) => {
-    const azureResourceClient =
-      await clientProviderWithMapper.getAuthenticatedClient(request);
+    const azureResourceClient = await getClient(request);
 
     serverLogger.debug("Dependencies injected for current request");
 
